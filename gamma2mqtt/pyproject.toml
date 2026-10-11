@@ -1,0 +1,27 @@
+[project]
+name = "gamma2mqtt"
+version = "0.1.0"
+description = "Passive EBV Gamma 23 B RS485 reader that publishes to Home Assistant via MQTT Discovery"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = [
+    "pyserial>=3.5",
+    "paho-mqtt>=1.6",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.scripts]
+gamma2mqtt = "gamma2mqtt.__main__:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

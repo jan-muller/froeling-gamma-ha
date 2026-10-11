@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+dist/*.map
+.pytest_cache/
+.DS_Store
+gamma_logs*/
+*.log
+.env
+
+# Private captures and handoff document: kept locally only, never published
+GAMMA_23B_COMPLEET_CLAUDE_PAKKET/

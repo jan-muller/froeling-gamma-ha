@@ -1,0 +1,23 @@
+# systemd unit for gamma2mqtt on the Raspberry Pi.
+#
+#   sudo cp gamma2mqtt.service /etc/systemd/system/
+#   sudo cp gamma2mqtt.env.example /etc/gamma2mqtt.env && sudo nano /etc/gamma2mqtt.env
+#   sudo systemctl daemon-reload && sudo systemctl enable --now gamma2mqtt
+#   journalctl -u gamma2mqtt -f
+[Unit]
+Description=EBV Gamma 23 B RS485 -> MQTT bridge (passive)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=admin
+EnvironmentFile=/etc/gamma2mqtt.env
+ExecStart=/home/admin/gamma2mqtt/.venv/bin/gamma2mqtt
+Restart=always
+RestartSec=5
+# The bridge only reads; nothing else should hold the adapter open.
+SupplementaryGroups=dialout
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>froeling-gamma-card preview</title>
+<style>
+  body { margin: 0; padding: 24px; background: #111; font-family: Roboto, system-ui, sans-serif; color: #ddd; }
+  .wrap { max-width: 920px; margin: 0 auto; display: grid; gap: 20px; }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; }
+  button { background: #223; color: #eee; border: 1px solid #446; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+  ha-card { display: block; border-radius: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="controls">
+    <button data-scenario="flame">Scenario: vlam aan (capture 3)</button>
+    <button data-scenario="night">Scenario: ketel heet, vlam uit (capture 2)</button>
+    <button data-scenario="uvs">Scenario: met UVS 42 sensoren</button>
+    <button data-scenario="offline">Scenario: offline</button>
+  </div>
+  <froeling-gamma-card id="card"></froeling-gamma-card>
+  <froeling-gamma-card id="card-mobile" style="max-width:380px"></froeling-gamma-card>
+</div>
+<script>
+  // Minimal stand-ins for HA elements used by the card.
+  customElements.define("ha-card", class extends HTMLElement {});
+  customElements.define("ha-icon", class extends HTMLElement {
+    static get observedAttributes() { return ["icon"]; }
+    attributeChangedCallback() { this.textContent = ({"mdi:fire-alert":"🔥","mdi:fire-off":"🚫","mdi:calendar-clock":"🗓","mdi:radiator":"♨️","mdi:weather-night":"🌙"})[this.getAttribute("icon")] || "•"; }
+  });
+</script>
+<script src="../dist/froeling-gamma-card.js"></script>
+<script>
+  const now = new Date().toISOString();
+  const s = (state, attributes = {}, extra = {}) => ({ state: String(state), attributes, last_updated: now, last_changed: now, ...extra });
+  const base = (o) => ({
+    "sensor.gamma_outside_temperature": s(o.outside, { confidence: "confirmed", unit_of_measurement: "°C" }),
+    "sensor.gamma_boiler_temperature": s(o.boiler, { confidence: "confirmed" }),
+    "sensor.gamma_heating_flow_temperature": s(o.flow, { confidence: "probable" }),
+    "sensor.gamma_room_temperature": s(o.room, { confidence: "confirmed" }),
+    "sensor.gamma_room_target_temperature": s(o.room_target, { confidence: "confirmed" }),
+    "sensor.gamma_hot_water_target": s(55, { confidence: "confirmed" }),
+    "sensor.gamma_operating_mode": s(o.mode, { confidence: "confirmed" }),
+    "binary_sensor.gamma_flame_request": s(o.flame, { confidence: "candidate" }, { last_changed: new Date(Date.now() - 7 * 60000).toISOString() }),
+    "sensor.uvs42_t3": s(77), "sensor.uvs42_t2": s(75), "sensor.uvs42_t4": s(54.2),
+    "binary_sensor.uvs42_a1": s("on"), "binary_sensor.uvs42_a2": s("off"),
+  });
+  const scenarios = {
+    flame: base({ outside: 12.5, boiler: 36, flow: 26.5, room: 22, room_target: 23, mode: "auto", flame: "on" }),
+    night: base({ outside: 7, boiler: 79.5, flow: 31, room: 21, room_target: 21, mode: "heating", flame: "off" }),
+    uvs: base({ outside: 8.5, boiler: 73, flow: 42, room: 21, room_target: 21, mode: "heating", flame: "off" }),
+    offline: Object.fromEntries(Object.entries(base({ outside: 7, boiler: 79.5, flow: 31, room: 21, room_target: 21, mode: "heating", flame: "off" })).map(([k, v]) => [k, { ...v, state: "unavailable" }])),
+  };
+  const cfg = { title: "Verwarming", entities: {} };
+  const cfgUvs = { title: "Verwarming", entities: { buffer_top: "sensor.uvs42_t3", buffer_bottom: "sensor.uvs42_t2", hot_water: "sensor.uvs42_t4", boiler_pump: "binary_sensor.uvs42_a1", hot_water_pump: "binary_sensor.uvs42_a2" } };
+  const cards = [document.getElementById("card"), document.getElementById("card-mobile")];
+  function apply(name) {
+    cards.forEach((c) => { c.setConfig(name === "uvs" ? cfgUvs : cfg); c.hass = { states: scenarios[name] }; });
+    document.title = `preview: ${name}`;
+  }
+  document.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => apply(b.dataset.scenario)));
+  window.apply = apply;
+  apply(new URLSearchParams(location.search).get("s") || "flame");
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# Voorbeeld: voeg dit toe aan een dashboard (Bewerken -> Kaart toevoegen -> Handmatig).
+# Vereist resource: /hacsfiles/froeling-gamma-card/froeling-gamma-card.js (type: module)
+# of, bij handmatige installatie in config/www/: /local/froeling-gamma-card.js
+
+type: custom:froeling-gamma-card
+title: Verwarming
+show_tiles: true
+entities:
+  outside: sensor.gamma_outside_temperature
+  boiler: sensor.gamma_boiler_temperature
+  flow: sensor.gamma_heating_flow_temperature
+  room: sensor.gamma_room_temperature
+  room_target: sensor.gamma_room_target_temperature
+  hot_water_target: sensor.gamma_hot_water_target
+  mode: sensor.gamma_operating_mode
+  flame: binary_sensor.gamma_flame_request
+  # Optioneel, zodra de UVS 42 via een DL-interface in HA zit:
+  # buffer_top: sensor.uvs42_t3
+  # buffer_bottom: sensor.uvs42_t2
+  # hot_water: sensor.uvs42_t4
+  # boiler_pump: binary_sensor.uvs42_a1
+  # hot_water_pump: binary_sensor.uvs42_a2
+thresholds:
+  flow_active: 28     # °C aanvoer waarboven het verwarmingscircuit als actief wordt getekend
+  boiler_active: 60   # °C ketel waarboven vuur/rook en de laadpomp worden getekend (als er geen pomp-entity is)
