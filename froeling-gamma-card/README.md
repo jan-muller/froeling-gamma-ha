@@ -13,7 +13,7 @@ The **ignition request** (the flame symbol on the Gamma display) lights up orang
 **HACS (recommended):** HACS → Frontend → ⋮ → *Custom repositories* → URL of this repository,
 category *Dashboard*. Then install the card; HACS registers the resource for you.
 
-**Manual:** copy `dist/froeling-gamma-card.js` to `config/www/` and add
+**Manual:** copy `dist/froeling-gamma-card.js` (repository root) to `config/www/` and add
 `/local/froeling-gamma-card.js` (JavaScript module) under *Settings → Dashboards → ⋮ → Resources*.
 
 ## Configuration
@@ -38,6 +38,6 @@ Labels on the card are in Dutch, matching the entity names gamma2mqtt creates.
 
 ## Development
 
-No build step. Open `dev/preview.html` in a browser; it loads `dist/froeling-gamma-card.js` with a
+No build step. Open `dev/preview.html` in a browser; it loads `../../dist/froeling-gamma-card.js` with a
 mock `hass` object and buttons for four scenarios (flame on, boiler hot, with UVS 42, offline).
 Chip coordinates live in `CHIPS` (viewBox 1000×560) and must stay in sync with the SVG in `sceneSvg()`.

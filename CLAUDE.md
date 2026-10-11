@@ -10,16 +10,17 @@ controller into Home Assistant, fully local:
 1. `gamma2mqtt/` – Python service for the Raspberry Pi. Reads the Gamma RS485 bus **passively**
    (9600 8S1), validates CRC-16/KERMIT frames, decodes known payload bytes and publishes them with
    MQTT Discovery. Never transmits on the bus; do not add writes or any boiler control.
-2. `froeling-gamma-card/` – dependency-free Lovelace custom card (single JS file, no build step)
-   that draws the installation as an SVG schematic with the live values overlaid.
+2. `dist/froeling-gamma-card.js` – dependency-free Lovelace custom card (single JS file, no build
+   step) that draws the installation as an SVG schematic with the live values overlaid. It sits in
+   the repo root `dist/` with `hacs.json` beside it because HACS requires that layout for dashboard
+   plugins; the card's README, example YAML and dev preview live in `froeling-gamma-card/`.
 
-`GAMMA_23B_COMPLEET_CLAUDE_PAKKET/` is **private reference material that must never be committed**
-(it is gitignored; it was removed from history once already). It holds the protocol handoff
-document (`GAMMA_23B_HOME_ASSISTANT_HANDOFF.md`, the authoritative source for frame layout, field
-positions and confidence levels), CSV captures and the original discovery scripts. Read the handoff
-before changing anything in `model.py`. Capture `gamma_frames(2).csv` is the long "flame symbol off"
-recording, `gamma_frames(3).csv` the short "flame symbol on" one; the tests that use them skip
-when the folder is absent. The protocol facts needed to work on the code are summarised in the
+`private/` (gitignored, local only) holds reference material that **must never be committed or
+named in public files**: the protocol handoff document (authoritative for frame layout, field
+positions and confidence levels), CSV bus captures and the original discovery scripts. Read the
+handoff there before changing anything in `model.py`. `gamma_frames(2).csv` is the long "flame
+symbol off" recording, `gamma_frames(3).csv` the short "flame symbol on" one; tests that use them
+skip when the folder is absent. The protocol facts needed to work on the code are summarised in the
 module docstrings of `protocol.py` and `model.py`.
 
 ## Commands
@@ -30,7 +31,7 @@ uv sync --extra dev                 # creates .venv with pytest
 uv run pytest                       # all tests (use real captured frames)
 uv run pytest tests/test_decode.py -k p19   # single test
 uv run gamma2mqtt --print-discovery # dump HA discovery payloads
-uv run gamma2mqtt --replay "../GAMMA_23B_COMPLEET_CLAUDE_PAKKET/gamma_frames(3).csv" \
+uv run gamma2mqtt --replay "../private/gamma_frames(3).csv" \
     --replay-speed 20 --replay-loop --mqtt-host <broker>   # end-to-end without hardware
 ```
 
@@ -58,7 +59,7 @@ Conventions that matter:
 - Stale data makes entities *unavailable* (bridge availability topic + `expire_after`), never OFF.
 - `bridge.py` supports both paho-mqtt 1.x (Debian packages on the Pi) and 2.x; keep both paths.
 
-**Card** (`froeling-gamma-card/dist/froeling-gamma-card.js`): the SVG scene in `sceneSvg()` uses a
+**Card** (`dist/froeling-gamma-card.js`): the SVG scene in `sceneSvg()` uses a
 1000×560 viewBox and the `CHIPS` array positions the HTML value chips in the same coordinate space;
 move both together. Chip DOM classes are `chip-<id>` (plain `<id>` clashes with SVG classes such
 as `.flow`). Animations are driven purely by toggling `.on`; derived activity (heating circuit,

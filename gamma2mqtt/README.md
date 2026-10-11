@@ -56,12 +56,15 @@ Every option is also available as an environment variable `GAMMA_<OPTION>`:
 
 ```bash
 uv sync --extra dev && uv run pytest
-uv run gamma2mqtt --replay "../GAMMA_23B_COMPLEET_CLAUDE_PAKKET/gamma_frames(3).csv" \
+uv run gamma2mqtt --replay path/to/gamma_frames.csv \
     --replay-speed 20 --replay-loop --mqtt-host <broker>
 ```
 
-The replay publishes exactly the same topics as the live service, which is convenient for
-developing the dashboard card.
+The replay takes a `gamma_frames*.csv` file as written by the capture tooling (columns
+`timestamp,type,source,destination,payload_length,payload_hex,frame_hex`) and publishes exactly the
+same topics as the live service, which is convenient for developing the dashboard card.
+Tests that need captures look for them in a gitignored `private/` folder in the repository root and
+skip when it is absent.
 
 ## Topics
 

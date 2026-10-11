@@ -5,8 +5,7 @@ Fröling FH-G Turbo 2000 wood boiler + EBV Gamma 23 B heating controller → Hom
 | Directory | What |
 |---|---|
 | [`gamma2mqtt/`](gamma2mqtt) | Python service for the Raspberry Pi: reads the Gamma passively over RS485 (9600 8S1), validates CRC-16/KERMIT, decodes the known fields and publishes them via MQTT Discovery. |
-| [`froeling-gamma-card/`](froeling-gamma-card) | Lovelace card (HACS) with a schematic view of the boiler, buffer tank, hot-water cylinder and heating circuit, with live values placed where they belong. |
-| `GAMMA_23B_COMPLEET_CLAUDE_PAKKET/` | Private, not in this repository (gitignored): protocol handoff, bus captures (CSV) and the original discovery scripts. Tests and the replay mode use it when present. |
+| [`dist/froeling-gamma-card.js`](dist) + [`froeling-gamma-card/`](froeling-gamma-card) | Lovelace card (HACS) with a schematic view of the boiler, buffer tank, hot-water cylinder and heating circuit, with live values placed where they belong. The card file lives in `dist/` and `hacs.json` in the root because HACS requires that layout; docs, example config and the dev preview are in `froeling-gamma-card/`. |
 
 Data flow: `Gamma 23 B ──RS485──> Pi (gamma2mqtt) ──MQTT──> Home Assistant ──> froeling-gamma-card`
 

@@ -31,7 +31,7 @@
     attributeChangedCallback() { this.textContent = ({"mdi:fire-alert":"🔥","mdi:fire-off":"🚫","mdi:calendar-clock":"🗓","mdi:radiator":"♨️","mdi:weather-night":"🌙"})[this.getAttribute("icon")] || "•"; }
   });
 </script>
-<script src="../dist/froeling-gamma-card.js"></script>
+<script src="../../dist/froeling-gamma-card.js"></script>
 <script>
   const now = new Date().toISOString();
   const s = (state, attributes = {}, extra = {}) => ({ state: String(state), attributes, last_updated: now, last_changed: now, ...extra });

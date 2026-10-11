@@ -2,7 +2,8 @@ from pathlib import Path
 
 import pytest
 
-CAPTURES = Path(__file__).resolve().parents[2] / "GAMMA_23B_COMPLEET_CLAUDE_PAKKET"
+# Local-only bus captures (gitignored). Tests using them skip when the folder is missing.
+CAPTURES = Path(__file__).resolve().parents[2] / "private"
 
 
 @pytest.fixture(scope="session")
