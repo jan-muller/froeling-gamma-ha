@@ -19,21 +19,26 @@ stream = []
 pending = b""
 for ln in lines[1:]:
     if ln.startswith("#"): continue
-    t, hx = ln.split()
+    parts = ln.split()
+    if len(parts) == 3 and parts[1] == "TX":
+        for b in bytes.fromhex(parts[2]):
+            stream.append((int(parts[0]), b, False, True))
+        continue
+    t, hx = parts
     t = int(t); data = pending + bytes.fromhex(hx); pending = b""
     i = 0
     while i < len(data):
         b = data[i]
         if b == 0xFF:
             if i + 1 >= len(data): pending = data[i:]; break
-            if data[i+1] == 0xFF: stream.append((t, 0xFF, False)); i += 2; continue
+            if data[i+1] == 0xFF: stream.append((t, 0xFF, False, False)); i += 2; continue
             if data[i+1] == 0x00:
                 if i + 2 >= len(data): pending = data[i:]; break
-                stream.append((t, data[i+2], True)); i += 3; continue
-        stream.append((t, b, False)); i += 1
+                stream.append((t, data[i+2], True, False)); i += 3; continue
+        stream.append((t, b, False, False)); i += 1
 
-print("bytes:", len(stream), "marked:", sum(1 for s in stream if s[2]))
-print("marked values:", Counter(f"{b:02X}" for _, b, mk in stream if mk).most_common(20))
+print("bytes:", len(stream), "marked:", sum(1 for s in stream if s[2]), "tx:", sum(1 for s in stream if s[3]))
+print("marked values:", Counter(f"{b:02X}" for _, b, mk, _tx in stream if mk).most_common(20))
 
 def crc16(data):
     crc = 0
@@ -51,7 +56,7 @@ while i < n:
         ll = stream[i+3][1]; size = ll + 8
         if i + size <= n:
             cand = bytes(s[1] for s in stream[i:i+size])
-            if cand[-1] == 0x03 and crc16(cand[1:-3]) == int.from_bytes(cand[-3:-1], "little") and not any(s[2] for s in stream[i:i+size]):
+            if cand[-1] == 0x03 and crc16(cand[1:-3]) == int.from_bytes(cand[-3:-1], "little") and not any(s[2] or s[3] for s in stream[i:i+size]):
                 pl = cand[4:-3]
                 frames.append((i, i+size, cand[1], cand[2], f"{ll:02X}{pl[0]:02X}", pl))
                 i += size; continue
@@ -63,7 +68,7 @@ pre = defaultdict(Counter)
 gaps = defaultdict(list)
 for (a, b, src, dst, kind, pl) in frames:
     ctx = stream[max(0, a-6):a]
-    desc = " ".join(("*" if mk else "") + f"{by:02X}" for _, by, mk in ctx)
+    desc = " ".join((">" if tx else "*" if mk else "") + f"{by:02X}" for _, by, mk, tx in ctx)
     pre[(f"{src:02X}", kind)][desc] += 1
     # gap from last marked byte to frame start
     j = a - 1
@@ -81,7 +86,7 @@ for k in sorted(pre):
 post = defaultdict(Counter)
 for (a, b, src, dst, kind, pl) in frames:
     ctx = stream[b:b+5]
-    post[(f"{src:02X}", kind)][" ".join(("*" if mk else "") + f"{by:02X}" for _, by, mk in ctx)] += 1
+    post[(f"{src:02X}", kind)][" ".join((">" if tx else "*" if mk else "") + f"{by:02X}" for _, by, mk, tx in ctx)] += 1
 print("\n=== following tokens ===")
 for k in sorted(post):
     print(k, post[k].most_common(3))
@@ -114,8 +119,30 @@ if target:
     cur_t = None; buf = []
     def flush():
         if buf: print(f"{(cur_t - t0)/1e6:9.1f} ms  " + " ".join(buf))
-    for t, by, mk in stream[lo:hi]:
+    for t, by, mk, tx in stream[lo:hi]:
         if t != cur_t:
             flush(); cur_t = t; buf = []
-        buf.append(("*" if mk else "") + f"{by:02X}")
+        buf.append((">" if tx else "*" if mk else "") + f"{by:02X}")
     flush()
+
+tx_idx = [k for k, s_ in enumerate(stream) if s_[3]]
+if tx_idx:
+    print("\n=== context around TX replies (first 4, ms rel to TX; > = sent by us) ===")
+    shown = 0; last = -10**18
+    for k in tx_idx:
+        if stream[k][0] - last < 2e9: continue
+        last = stream[k][0]; shown += 1
+        if shown > 4: break
+        t0 = stream[k][0]
+        lo = k
+        while lo > 0 and t0 - stream[lo][0] < 0.4e9: lo -= 1
+        hi = k
+        while hi < n and stream[hi][0] - t0 < 1.5e9: hi += 1
+        print(f"--- TX at {wall(t0).strftime('%H:%M:%S.%f')[:-3]}")
+        cur_t = None; buf = []
+        for t, by, mk, tx in stream[lo:hi]:
+            if t != cur_t:
+                if buf: print(f"{(cur_t - t0)/1e6:9.1f} ms  " + " ".join(buf))
+                cur_t = t; buf = []
+            buf.append((">" if tx else "*" if mk else "") + f"{by:02X}")
+        if buf: print(f"{(cur_t - t0)/1e6:9.1f} ms  " + " ".join(buf))
