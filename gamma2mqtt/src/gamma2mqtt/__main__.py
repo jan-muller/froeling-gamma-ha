@@ -54,6 +54,8 @@ def build_parser() -> argparse.ArgumentParser:
     t.add_argument("--expire-after", type=int, default=int(_env("EXPIRE_AFTER", "900")),
                    help="HA expire_after for sensors (should exceed republish interval)")
 
+    ap.add_argument("--record", default=_env("RECORD"), metavar="DIR",
+                    help="append every valid frame to DIR/gamma_frames_<date>.csv (replayable)")
     ap.add_argument("--log-level", default=_env("LOG_LEVEL", "INFO"))
     ap.add_argument("--print-discovery", action="store_true",
                     help="print discovery payloads and exit")
@@ -73,6 +75,7 @@ def main(argv: Optional[list] = None) -> int:
         device_id=args.device_id, device_name=args.device_name,
         stale_timeout=args.stale_timeout, republish_interval=args.republish_interval,
         expire_after=args.expire_after, publish_raw=args.publish_raw,
+        record_dir=args.record,
     )
 
     if args.print_discovery:

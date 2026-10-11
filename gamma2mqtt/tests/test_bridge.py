@@ -37,7 +37,7 @@ def test_discovery_payloads_are_valid_json_and_unique():
         assert cfg["device"]["identifiers"] == ["gamma23b"]
     flame = json.loads(dict(msgs)["homeassistant/binary_sensor/gamma23b/flame_request/config"])
     assert flame["payload_on"] == "ON" and "expire_after" not in flame
-    assert "device_class" not in flame
+    assert flame["device_class"] == "heat"
 
 
 def test_publishes_only_on_change_and_marks_online():
@@ -78,3 +78,36 @@ def test_raw_topic_optional():
     b = make_bridge(publish_raw=True)
     b.handle_bytes(F1002)
     assert any(t == "gamma2mqtt/raw/1002" for t in b.client.topics())
+
+
+def test_record_writes_replayable_csv(tmp_path):
+    import csv
+    from gamma2mqtt.protocol import Frame
+
+    b = make_bridge(record_dir=str(tmp_path))
+    b.handle_bytes(F2004_NOFLAME + F1002)
+    b.recorder.close()
+    files = list(tmp_path.glob("gamma_frames_*.csv"))
+    assert len(files) == 1
+    rows = list(csv.DictReader(files[0].open()))
+    assert [r["type"] for r in rows] == ["2004", "1002"]
+    assert Frame.parse(bytes.fromhex(rows[0]["frame_hex"])).raw == F2004_NOFLAME
+
+
+def test_busdiff_reports_changes(tmp_path, capsys):
+    import csv
+    from gamma2mqtt.busdiff import main as busdiff
+    from gamma2mqtt.protocol import Frame
+
+    path = tmp_path / "f.csv"
+    with path.open("w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["timestamp", "type", "source", "destination", "payload_length", "payload_hex", "frame_hex"])
+        for i, raw in enumerate((F2004_NOFLAME, F2004_NOFLAME, F2004_FLAME)):
+            f = Frame.parse(raw)
+            w.writerow([f"2026-10-11T20:00:{i:02d}.000", f.kind, "10", "20", len(f.payload),
+                        f.payload.hex(" "), raw.hex(" ")])
+    assert busdiff([str(path), "--at", "20:00:02", "--window", "5"]) == 0
+    out = capsys.readouterr().out
+    assert "P19  flame_request" in out and "0x00 -> 0x01" in out
+    assert "P2   outside_temperature" in out

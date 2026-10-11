@@ -4,7 +4,7 @@ Lovelace card for Home Assistant that shows the heating installation as a schema
 Fröling wood boiler → buffer tank → mixing valve → radiators, plus the domestic hot-water cylinder.
 Live values from the EBV Gamma 23 B (via [gamma2mqtt](../gamma2mqtt)) sit as chips where they
 belong; pipes animate when there is flow and the boiler shows fire when it is hot.
-The **ignition request** (the flame symbol on the Gamma display) lights up orange.
+The **flame symbol** (the Gamma's heat-demand indicator) lights up orange.
 
 ![preview](../docs/card-preview.png)
 
@@ -31,8 +31,7 @@ options already works.
 | `thresholds.boiler_active` | `60` | Boiler temperature above which fire and the charging pump animate (only without `boiler_pump`) |
 
 Clicking a chip or tile opens the *more-info* dialog of that entity.
-If `binary_sensor.gamma_flame_request` carries the attribute `confidence: candidate`, the card shows
-"experimenteel · 2004 P19" below the ignition request.
+Fields that gamma2mqtt marks as `probable` or `candidate` show a small note under their chip.
 
 Labels on the card are in Dutch, matching the entity names gamma2mqtt creates.
 

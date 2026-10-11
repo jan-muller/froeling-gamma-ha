@@ -59,7 +59,7 @@ const CHIPS = [
   { id: "outside", x: 40, y: 56, anchor: "left", label: "Buiten", tone: "sky", bar: [-15, 35] },
   { id: "mode", x: 940, y: 60, anchor: "right", label: "Gamma 23 B", tone: "steel" },
   { id: "boiler", x: 178, y: 262, label: "Houtketel", tone: "ember", bar: [20, 95] },
-  { id: "flame", x: 330, y: 112, label: "Aansteekvraag", tone: "flame" },
+  { id: "flame", x: 330, y: 112, label: "Vlamsymbool", tone: "flame" },
   { id: "buffer_top", x: 388, y: 246, label: "Buffer boven", tone: "ember", bar: [20, 95] },
   { id: "buffer_bottom", x: 388, y: 392, label: "Buffer onder", tone: "ember", bar: [20, 95] },
   { id: "hot_water", x: 578, y: 300, label: "Warm water", tone: "water", bar: [20, 75] },
@@ -598,12 +598,12 @@ class FroelingGammaCard extends HTMLElement {
       el.classList.toggle("hidden", !this._entityFor("flame"));
       el.classList.toggle("on", flameOn === true);
       el.classList.toggle("unavailable", flameOn === null);
-      const text = flameOn === null ? "Geen data" : flameOn ? "Aansteken" : "Geen vraag";
+      const text = flameOn === null ? "Geen data" : flameOn ? "Warmtevraag" : "Geen vraag";
       el.querySelector(".value").innerHTML = `<ha-icon icon="${flameOn ? "mdi:fire-alert" : "mdi:fire-off"}"></ha-icon>${esc(text)}`;
       const exp = el.querySelector(".exp");
       if (exp) {
         const conf = flameState && flameState.attributes ? flameState.attributes.confidence : "";
-        exp.textContent = conf === "candidate" ? "experimenteel · 2004 P19" : "";
+        exp.textContent = conf === "candidate" ? "experimenteel · 2004 P19" : flameOn ? "ketel moet leveren" : "";
       }
       const sub = el.querySelector(".sub");
       if (sub && flameOn && flameState) {

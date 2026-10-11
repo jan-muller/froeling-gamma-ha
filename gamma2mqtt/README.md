@@ -15,8 +15,9 @@ One device *Fröling Gamma 23 B* with, among others:
 | `sensor.gamma_room_temperature` / `_room_target_temperature` | 2806 P2 / P4 | confirmed |
 | `sensor.gamma_room_day_target` / `_room_night_target` | 2806 P37 / P38 | confirmed |
 | `sensor.gamma_hot_water_target` | 2806 P10 | confirmed, **setpoint** only |
-| `sensor.gamma_operating_mode` | 2806 P7 | confirmed (`auto`, `heating`, `reduced`, `party`, `absent`, `holiday`, `unknown`) |
-| `binary_sensor.gamma_flame_request` | 2004 P19 == 0x01 | **experimental** (candidate for the flame symbol) |
+| `sensor.gamma_operating_mode` | 2806 P7 | confirmed: mode set on the **room unit** (`auto`, `heating` = day, `reduced` = night, `party`, `absent`, `holiday`, `unknown`) |
+| `binary_sensor.gamma_flame_request` | 2004 P19 == 0x01 | confirmed: the flame symbol on the display = heat demand for the boiler (off in night mode) |
+| `sensor.gamma_heating_mode` | 2806 P12 | confirmed: the sun/moon/clock selector on the **Gamma itself** (`auto`, `day`, `night`) |
 | `sensor.gamma_status_p17_raw`, `_p18_raw`, `_p19_raw` | 2004 | diagnostic |
 | `sensor.gamma_frames_total`, `_crc_errors`, `_frames_per_minute` | bridge | diagnostic |
 
@@ -48,6 +49,7 @@ Every option is also available as an environment variable `GAMMA_<OPTION>`:
 --topic-prefix (gamma2mqtt)  --discovery-prefix (homeassistant)  --device-id (gamma23b)
 --stale-timeout 60  --republish-interval 300  --expire-after 900
 --publish-raw            # every frame payload under gamma2mqtt/raw/<type>
+--record DIR             # append every valid frame to DIR/gamma_frames_<date>.csv
 --replay CSV --replay-speed N --replay-loop   # replay a capture instead of the serial port
 --print-discovery        # print the discovery payloads and exit
 ```
@@ -65,6 +67,18 @@ The replay takes a `gamma_frames*.csv` file as written by the capture tooling (c
 same topics as the live service, which is convenient for developing the dashboard card.
 Tests that need captures look for them in a gitignored `private/` folder in the repository root and
 skip when it is absent.
+
+## Analysing bus captures
+
+`gamma-busdiff` lists every payload byte that changed in a recorded CSV, with timestamps, so an
+action on the controller (changing the mode, the flame symbol appearing) can be matched to bytes:
+
+```bash
+gamma-busdiff ~/gamma_logs/gamma_frames_2026-10-11.csv --at 20:31:00 --at 20:34:30 --window 45
+gamma-busdiff frames.csv --kinds 2806 --summary
+```
+
+Clock bytes (`0905`) and the `0100` toggle are suppressed unless `--all` is given.
 
 ## Topics
 

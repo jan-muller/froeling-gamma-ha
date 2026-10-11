@@ -23,6 +23,7 @@ from typing import Any, Dict, Optional
 from .decode import Reading, decode
 from .discovery import Topics, discovery_messages
 from .protocol import FrameParser
+from .record import FrameRecorder
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ class BridgeConfig:
     expire_after: int = 900
     publish_raw: bool = False
     reconnect_delay: float = 5.0
+    record_dir: Optional[str] = None
 
 
 def _make_mqtt_client(client_id: str):
@@ -72,6 +74,7 @@ class Bridge:
         self.frame_kinds: Dict[str, int] = {}
         self._minute_window: list = []
         self._connected = False
+        self.recorder = FrameRecorder(config.record_dir) if config.record_dir else None
 
     # ------------------------------------------------------------------ MQTT
     def _setup_mqtt(self) -> None:
@@ -158,6 +161,8 @@ class Bridge:
             self.frames_total += 1
             self.frame_kinds[frame.kind] = self.frame_kinds.get(frame.kind, 0) + 1
             self._minute_window.append(now)
+            if self.recorder is not None:
+                self.recorder.write(frame)
             if self.cfg.publish_raw:
                 self.client.publish(self.topics.raw(frame.kind),
                                     f"{frame.route} {frame.payload.hex(' ')}", qos=0, retain=False)
@@ -215,6 +220,8 @@ class Bridge:
                         self._update_availability()
                     self._stop.wait(self.cfg.reconnect_delay)
         finally:
+            if self.recorder is not None:
+                self.recorder.close()
             with self._lock:
                 self.online = False
                 self.client.publish(self.topics.availability, "offline", qos=1, retain=True)

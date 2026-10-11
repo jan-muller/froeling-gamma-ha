@@ -12,5 +12,4 @@ Data flow: `Gamma 23 B ──RS485──> Pi (gamma2mqtt) ──MQTT──> Home
 ![card preview](docs/card-preview.png)
 
 Safety: this project only reads. No RS485 writes, no boiler control based on provisionally
-interpreted status bytes. The ignition request (`2004 P19`) is a candidate until a live transition
-of the flame symbol on the display has been logged.
+interpreted status bytes.

@@ -51,6 +51,14 @@ def test_2806_from_controller_only():
     assert decode(other) == []
 
 
+def test_heating_mode_from_2806_p12():
+    payload = bytearray(Frame.parse(F2806_10).payload)
+    for raw, want in ((0x00, "auto"), (0x02, "day"), (0x08, "night"), (0x05, "unknown")):
+        payload[11] = raw  # P12
+        v = {r.key: r.value for r in decode(Frame.build(0x10, 0x20, bytes(payload)))}
+        assert v["heating_mode"] == want
+
+
 def test_0905_clock():
     v = by_key(F0905)
     assert v["controller_time"] == "2026-10-11T14:41:31"

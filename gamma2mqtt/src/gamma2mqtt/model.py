@@ -7,7 +7,7 @@ Confidence levels (mirrors the handoff document, keep them honest):
 
 * ``confirmed``  – value matches external documentation and our own readings.
 * ``probable``   – strong correlation in our captures, not independently verified.
-* ``candidate``  – distinguishes the captured situations but no live transition seen.
+* ``candidate``  – distinguishes captured situations but no live transition seen yet.
 * ``raw``        – undocumented byte exposed for diagnostics only.
 """
 
@@ -55,6 +55,16 @@ def mode(pos: int) -> Callable[[bytes], Optional[str]]:
 
 def flag(pos: int, on: int = 0x01) -> Callable[[bytes], Optional[bool]]:
     return lambda p: (p[pos - 1] == on) if len(p) >= pos else None
+
+
+#: 2806 P12: the sun/moon/clock selector on the Gamma itself (confirmed live 11 Oct 2026).
+#: Independent of P7, which the room unit sets (0x03 day, 0x04 night, 0x00 auto; the Gamma
+#: copies the room unit's 2806 block about 4 s later).
+HEATING_MODES: Dict[int, str] = {0x00: "auto", 0x02: "day", 0x08: "night"}
+
+
+def heating_mode(pos: int) -> Callable[[bytes], Optional[str]]:
+    return lambda p: HEATING_MODES.get(p[pos - 1], "unknown") if len(p) >= pos else None
 
 
 def dhw_reload(pos: int) -> Callable[[bytes], Optional[str]]:
@@ -111,11 +121,15 @@ FIELDS: Tuple[Field, ...] = (
     _temp("outside_temperature", "2004", 2, "Buitentemperatuur", "confirmed",
           convert=outside(2)),
     _temp("boiler_temperature", "2004", 32, "Keteltemperatuur", "confirmed"),
-    Field("flame_request", "2004", 19, flag(19), "Aansteekvraag (experimenteel)", "candidate",
-          component="binary_sensor", icon="mdi:fire", extra={"device_class": None}),
-    Field("status_p17_raw", "2004", 17, raw_hex(17), "2004 P17 (raw)", "raw",
+    # Confirmed 11 Oct 2026 with two live transitions: the display flame symbol disappeared when
+    # the selector was set to night (P19 1->0, mixer closed) and returned on auto (P19 0->1).
+    # The symbol therefore means "heat demand for the boiler", not a physical flame.
+    Field("flame_request", "2004", 19, flag(19), "Vlamsymbool (warmtevraag)", "confirmed",
+          component="binary_sensor", icon="mdi:fire", extra={"device_class": "heat"}),
+    # P17/P18 drop to 0 together with P19 when the circuit is switched to night (mixer closes).
+    Field("status_p17_raw", "2004", 17, raw_hex(17), "2004 P17 (raw, mengkraan?)", "raw",
           diagnostic=True, icon="mdi:hexadecimal"),
-    Field("status_p18_raw", "2004", 18, raw_hex(18), "2004 P18 (raw)", "raw",
+    Field("status_p18_raw", "2004", 18, raw_hex(18), "2004 P18 (raw, circuit?)", "raw",
           diagnostic=True, icon="mdi:hexadecimal"),
     Field("status_p19_raw", "2004", 19, raw_hex(19), "2004 P19 (raw)", "raw",
           diagnostic=True, icon="mdi:hexadecimal"),
@@ -138,9 +152,12 @@ FIELDS: Tuple[Field, ...] = (
           source=CONTROLLER),
     _temp("hot_water_target", "2806", 10, "Warmwater setpoint", "confirmed", source=CONTROLLER,
           icon="mdi:water-thermometer"),
-    Field("operating_mode", "2806", 7, mode(7), "Bedrijfsmodus", "confirmed",
+    Field("operating_mode", "2806", 7, mode(7), "Bedrijfsmodus kamerbediening", "confirmed",
           source=CONTROLLER, device_class="enum", icon="mdi:home-thermometer",
           extra={"options": sorted(set(MODES.values())) + ["unknown"]}),
+    Field("heating_mode", "2806", 12, heating_mode(12), "Keuzeschakelaar Gamma (zon/maan/klok)", "confirmed",
+          source=CONTROLLER, device_class="enum", icon="mdi:theme-light-dark",
+          extra={"options": ["auto", "day", "night", "unknown"]}),
     Field("hot_water_manual_reload", "2806", 11, dhw_reload(11), "Warmwater nalading", "probable",
           source=CONTROLLER, device_class="enum", icon="mdi:water-boiler",
           extra={"options": ["off", "requested", "active", "unknown"]}, diagnostic=True),

@@ -43,7 +43,7 @@
     "sensor.gamma_room_target_temperature": s(o.room_target, { confidence: "confirmed" }),
     "sensor.gamma_hot_water_target": s(55, { confidence: "confirmed" }),
     "sensor.gamma_operating_mode": s(o.mode, { confidence: "confirmed" }),
-    "binary_sensor.gamma_flame_request": s(o.flame, { confidence: "candidate" }, { last_changed: new Date(Date.now() - 7 * 60000).toISOString() }),
+    "binary_sensor.gamma_flame_request": s(o.flame, { confidence: "confirmed" }, { last_changed: new Date(Date.now() - 7 * 60000).toISOString() }),
     "sensor.uvs42_t3": s(77), "sensor.uvs42_t2": s(75), "sensor.uvs42_t4": s(54.2),
     "binary_sensor.uvs42_a1": s("on"), "binary_sensor.uvs42_a2": s("off"),
   });
