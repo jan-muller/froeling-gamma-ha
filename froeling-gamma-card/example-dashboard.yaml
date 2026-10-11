@@ -1,6 +1,6 @@
-# Voorbeeld: voeg dit toe aan een dashboard (Bewerken -> Kaart toevoegen -> Handmatig).
-# Vereist resource: /hacsfiles/froeling-gamma-card/froeling-gamma-card.js (type: module)
-# of, bij handmatige installatie in config/www/: /local/froeling-gamma-card.js
+# Example: add this to a dashboard (Edit -> Add card -> Manual).
+# Requires the resource /hacsfiles/froeling-gamma-card/froeling-gamma-card.js (JavaScript module)
+# or, when copied manually to config/www/: /local/froeling-gamma-card.js
 
 type: custom:froeling-gamma-card
 title: Verwarming
@@ -14,12 +14,12 @@ entities:
   hot_water_target: sensor.gamma_hot_water_target
   mode: sensor.gamma_operating_mode
   flame: binary_sensor.gamma_flame_request
-  # Optioneel, zodra de UVS 42 via een DL-interface in HA zit:
+  # Optional, once the UVS 42 is in HA through a DL interface:
   # buffer_top: sensor.uvs42_t3
   # buffer_bottom: sensor.uvs42_t2
   # hot_water: sensor.uvs42_t4
   # boiler_pump: binary_sensor.uvs42_a1
   # hot_water_pump: binary_sensor.uvs42_a2
 thresholds:
-  flow_active: 28     # °C aanvoer waarboven het verwarmingscircuit als actief wordt getekend
-  boiler_active: 60   # °C ketel waarboven vuur/rook en de laadpomp worden getekend (als er geen pomp-entity is)
+  flow_active: 28     # °C flow temperature above which the heating circuit is drawn as active
+  boiler_active: 60   # °C boiler temperature above which fire/smoke and the charging pump are drawn (when no pump entity is set)

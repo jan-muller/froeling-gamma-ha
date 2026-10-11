@@ -1,15 +1,17 @@
 # froeling-gamma-ha
 
-Fröling FH-G Turbo 2000 houtketel + EBV Gamma 23 B regelaar → Home Assistant, lokaal en zonder cloud.
+Fröling FH-G Turbo 2000 wood boiler + EBV Gamma 23 B heating controller → Home Assistant, fully local, no cloud.
 
-| Map | Wat |
+| Directory | What |
 |---|---|
-| [`gamma2mqtt/`](gamma2mqtt) | Python-service op de Raspberry Pi: leest de Gamma passief via RS485 (9600 8S1), valideert CRC-16/KERMIT, decodeert bekende velden en publiceert via MQTT Discovery. |
-| [`froeling-gamma-card/`](froeling-gamma-card) | Lovelace-kaart (HACS) met een schematische weergave van ketel, buffer, boiler en cv-circuit met de live waarden op hun plek. |
-| [`GAMMA_23B_COMPLEET_CLAUDE_PAKKET/`](GAMMA_23B_COMPLEET_CLAUDE_PAKKET) | Technische overdracht, captures (CSV) en de oorspronkelijke discovery-scripts. **Leidend protocoldocument:** `GAMMA_23B_HOME_ASSISTANT_HANDOFF.md`. |
+| [`gamma2mqtt/`](gamma2mqtt) | Python service for the Raspberry Pi: reads the Gamma passively over RS485 (9600 8S1), validates CRC-16/KERMIT, decodes the known fields and publishes them via MQTT Discovery. |
+| [`froeling-gamma-card/`](froeling-gamma-card) | Lovelace card (HACS) with a schematic view of the boiler, buffer tank, hot-water cylinder and heating circuit, with live values placed where they belong. |
+| `GAMMA_23B_COMPLEET_CLAUDE_PAKKET/` | Private, not in this repository (gitignored): protocol handoff, bus captures (CSV) and the original discovery scripts. Tests and the replay mode use it when present. |
 
-Dataflow: `Gamma 23 B ──RS485──> Pi (gamma2mqtt) ──MQTT──> Home Assistant ──> froeling-gamma-card`
+Data flow: `Gamma 23 B ──RS485──> Pi (gamma2mqtt) ──MQTT──> Home Assistant ──> froeling-gamma-card`
 
-Veiligheid: er wordt uitsluitend gelezen. Geen RS485-writes, geen ketelsturing op basis van
-voorlopig geïnterpreteerde statusbytes. De aansteekvraag (`2004 P19`) is een kandidaat totdat een
-live overgang van het displayvlammetje is gelogd.
+![card preview](docs/card-preview.png)
+
+Safety: this project only reads. No RS485 writes, no boiler control based on provisionally
+interpreted status bytes. The ignition request (`2004 P19`) is a candidate until a live transition
+of the flame symbol on the display has been logged.

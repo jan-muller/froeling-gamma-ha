@@ -13,12 +13,14 @@ controller into Home Assistant, fully local:
 2. `froeling-gamma-card/` – dependency-free Lovelace custom card (single JS file, no build step)
    that draws the installation as an SVG schematic with the live values overlaid.
 
-`GAMMA_23B_COMPLEET_CLAUDE_PAKKET/` is reference material, not code to maintain: the protocol
-handoff document (`GAMMA_23B_HOME_ASSISTANT_HANDOFF.md`, the authoritative source for frame
-layout, field positions and confidence levels), CSV captures and the original discovery scripts.
-Read the handoff before changing anything in `model.py`. Capture `gamma_frames(2).csv` is the long
-"flame symbol off" recording, `gamma_frames(3).csv` the short "flame symbol on" one; tests rely on
-them being present.
+`GAMMA_23B_COMPLEET_CLAUDE_PAKKET/` is **private reference material that must never be committed**
+(it is gitignored; it was removed from history once already). It holds the protocol handoff
+document (`GAMMA_23B_HOME_ASSISTANT_HANDOFF.md`, the authoritative source for frame layout, field
+positions and confidence levels), CSV captures and the original discovery scripts. Read the handoff
+before changing anything in `model.py`. Capture `gamma_frames(2).csv` is the long "flame symbol off"
+recording, `gamma_frames(3).csv` the short "flame symbol on" one; the tests that use them skip
+when the folder is absent. The protocol facts needed to work on the code are summarised in the
+module docstrings of `protocol.py` and `model.py`.
 
 ## Commands
 
@@ -65,5 +67,5 @@ stay conservative. Default entity ids match what gamma2mqtt creates (`sensor.gam
 
 ## Language
 
-User-facing text (entity names, card labels, READMEs, commit messages) is Dutch; code, identifiers
-and MQTT keys are English.
+READMEs, code, identifiers and MQTT keys are English. Entity names and card labels shown in Home
+Assistant are Dutch, as are commit messages and the handoff document.
